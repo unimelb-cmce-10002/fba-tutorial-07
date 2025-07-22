@@ -1,0 +1,49 @@
+## Question 1
+
+This is the text for question 1, with its accompanying code 
+
+```{r}
+# Example code for the question
+1 + 1
+```
+
+::: {.content-visible when-profile="r-teaching-guide"}
+
+::: {.teaching-block}
+
+::: {.teaching-block-header}
+Teaching Note
+:::
+
+::: {.teaching-block-body}
+
+This is a pedagogical note just for instructors.
+
+You can include explanation, context, or extra R code:
+
+:::
+
+:::
+
+:::
+
+::: {.content-visible when-profile="r-solutions" when-profile="r-teaching-guide"}
+
+::: {.solution-block}
+
+::: {.solution-block-header}
+Solution
+:::
+
+::: {.solution-block-body}
+
+Here’s the explanation and code:
+
+```{r}
+print("Hello, world!")
+```
+:::
+
+:::
+
+:::
