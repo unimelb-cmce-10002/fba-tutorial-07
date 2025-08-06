@@ -1,9 +1,0 @@
----
-format:
-  html:
-    embed-resources: true
-engine: knitr
----
-
-{{< include _questions/question_1.qmd >}}
-

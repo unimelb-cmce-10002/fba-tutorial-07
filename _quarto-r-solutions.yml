@@ -1,6 +1,6 @@
 project:
   render:
-    - tutorial-r.qmd
+    - tutorial.qmd
 title: 'Solutions document: R version'
 format:
   html:
