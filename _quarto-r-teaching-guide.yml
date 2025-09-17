@@ -1,7 +1,7 @@
 project:
   render:
     - tutorial.qmd
-title: 'Teaching Guide: R version'
+title: 'Tutorial 7: Obtaining Macroeconomic Data through FRED'
 format:
   html:
     output-file: "tutorial-r-teaching-guide"

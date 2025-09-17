@@ -1,12 +1,196 @@
-<!-- question-type: prepare -->
-### Exercise 5: Title
+<!-- question-type: inclass -->
+### Exercise 5: Okun's Law
 
-This is the text for the question, with its accompanying code 
+You may have learned the **Okun's Law** from ECON10003 (Introductory Macroeconomics). This is an important relation for us to understand the relation between economic output and unemployment.
+
+::: callout-note
+## Definition: Okun's Law
+Okun's Law is a relation observed by Arthur Okun that links **changes** in the unemployment rate to **changes** in a country's real gross domestic product (GDP). It states that there is a negative correlation between changes in unemployment rate and changes in real GDP: a rise in the unemployment rate by a certain percentage generally corresponds to a fall in real GDP by a larger percentage. For example, a 1% increase in unemployment often correlates with a 2% to 3% decrease in real GDP.
+:::
+
+In this exercise, we are going to visualize the Okun's Law using the macroeconomic data obtained from FRED. Here is our roadmap:
+
+#### (a) Obtain Data
+Set up the API and use it to obtain real Gross Domestic Product (GDP) and seasonally adjusted unemployment rate data from 1990-01-01 to 2024-12-31.
 
 ```{r}
-# Example code for the question
-1 + 1
+#| eval: false
+# Load packages
+library(fredr) # Package for Using FRED API
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+
+# Assign your API key to a variable "api_key"
+api_key <- "YOUR API KEY" 
+# Set API Key 
+fredr_set_key(api_key)
 ```
+
+
+```{r}
+#| eval: false
+# Real GDP Data
+gdp <- YOUR_CODE(
+  series_id = "YOUR_ID",
+  observation_start = as.Date("1989-01-01"), # One-year ahead for lag operation
+  observation_end   = as.Date("2024-12-31")
+) %>%
+  YOUR_CODE(date, gdp = value) 
+
+unrate <- fredr(
+  series_id = "UNRATE",
+  observation_start = as.Date("1989-01-01"), # One-year ahead for lag operation
+  observation_end   = as.Date("2024-12-31")
+) %>%
+  YOUR_CODE(date, unrate = value)
+
+```
+
+#### (b) Frequency of Data
+
+Take a quick look at the data, are the two data share the same frequency? Can you propose some solutions to this situation?
+
+
+#### (c) Variable Calculation
+
+(c1) Calculate YoY growth (in %) of real GDP (Hint: be careful about the number of periods for your lag operation).
+
+```{r}
+#| eval: false
+# Calculate YoY GDP Growth
+gdp_growth <- gdp %>%
+  YOUR_CODE(date) %>%
+  YOUR_CODE(gdp_growth = 100 * (gdp / lag(gdp, YOUR_NUMBER) - 1)) 
+  # Calculate the GDP growth relative to the same quarter in the previous year
+```
+
+(c2) Convert monthly unemployment rate data into quarterly by calculating quarterly average unemployment rate. Calculate the changes in unemployment rate relative to the previous quarter.
+
+```{r}
+#| eval: false
+# Convert to Quarter Unemployment Rates and Calculate changes
+unrate_qtr <- unrate %>%
+  # Use the first month (Jan, Apr, Jul, Oct) to represent each quarter
+  YOUR_CODE(quarter = floor_date(date, "quarter")) %>% 
+  group_by(YOUR_OBJECT) %>%
+  summarize(
+    unrate = YOUR_CODE(unrate), 
+    .groups = "drop") %>%
+  rename(date = quarter) %>% # for easier merge in following steps
+  YOUR_CODE(date) %>%
+  YOUR_CODE(unrate_chg = unrate - lag(unrate))
+```
+
+#### (d) Visualize the Okun's Law
+
+Merge the changes in unemployment rates and real GDP in one single dataset, use `ggplot()` to create a scattered plot showing the relation between changes in unemployment rates (on the **horizontal** axis) and changes in real GDP (on the **vertical** axis).
+
+```{r}
+#| eval: false
+# Merge data
+okun <- YOUR_CODE(YOUR_OBJECT, YOUR_OBJECT, by = "YOUR_VARIABLE") %>%
+        filter(!is.na(unrate_chg) &!is.na(gdp_growth) )
+
+# Scatter Plot
+scatter_plt <- ggplot(YOUR_OBJECT, aes(x = YOUR_OBJECT, y = YOUR_OBJECT)) +
+  geom_point(color = "steelblue", alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, color = "darkred") +
+  labs(
+    title = "Okun’s Law Visualization",
+    x = "Change in Unemployment Rate (%)",
+    y = "Change in Real GDP (%)"
+  ) +
+  theme_minimal(base_size = 12)
+```
+
+#### (e) Quantify the Relation
+The fitted line provides with us a rough idea of the relation between changes in unemployment and real GDP. However, it is difficult to spot the exact slope of the fitted line in the graph. As Okun's Law suggests, a 1% increase in unemployment often correlates with a 2% to 3% decrease in real GDP. We would like to confirm this quantitative relation using the data from FRED. 
+To achieve our goal, we need to do a simple linear regression to obtain the exact value of the slope. In R, we can use the built-in method `lm` to fit a linear regression model. Once the model has been fitted, coefficient estimates will be stored in our assigned object. We can use the function `coef()` to get a list of numbers representing the intercept and the slope. 
+
+```{r}
+#| eval: false
+# Slope of fitted line
+line_fit <- lm(gdp_growth ~ unrate_chg, data = okun)
+coef(line_fit)
+
+# Equation (Just print it out in a string format)
+line_equation <- paste0("ΔGDP = ",
+                          round(coef(line_fit)[1], 2), " + ", 
+                          round(coef(line_fit)[2], 2), " × ΔUnemp")
+
+# Print out the equation
+line_equation
+```
+
+
+
+::: callout-note
+## What if our replication is inconsistent with the Okun's Law?
+
+- Check if everything is correct in our program (always necessary and important).
+- The sample is different: Okun's Law is based on data decades ago, whereas we are using recent decades. This may suggest that Okun's Law no longer holds (?).
+- Is there anything odd in the scattered plot?
+:::
+
+
+#### (f) Eliminate Outliers (Extreme Values)
+
+As you can see from the scattered plot in (d), there are a few outliers to the right of the graph (almost 10% unemployment rate). These points are due to the outbreak of COVID-19 in early 2020, when many people became jobless in a night because of lockdowns.
+
+Okun's law describes a general relation between changes in unemployment and GDP. It may not apply to such extreme cases as the COVID-19 outbreak. Additionally, such observations in the data will largely affect our inferences: it will affect the shape of the fitted line as well as the slope significantly. Hence, we need to get rid of these extreme cases ("outliers") from our sample when we are interested in obtaining a generalizable conclusion.
+
+There are many techniques dealing with outliers in data. We are going to adopt a simple and straightforward approach - trimming. By trimming the data, we drop observations with extremely large (small) values from the sample to eliminate their influence on our results and inferences. In common practice, we trim the sample at the 1^{st} and the 99^{th} percentiles, meaning that one observation is dropped if it has a value larger (smaller) than the 99^{th} (1^{st}) percentile of the data.
+
+```{r}
+#| eval: false
+# Remove the outliers
+okun_trim <- okun |>
+  filter(
+    between(gdp_growth, 
+            quantile(gdp_growth, 0.01, na.rm = TRUE), 
+            quantile(gdp_growth, 0.99, na.rm = TRUE)
+            ),
+    between(unrate_chg, 
+            quantile(unrate_chg, 0.01, na.rm = TRUE), 
+            quantile(unrate_chg, 0.99, na.rm = TRUE)
+            )
+  )
+```
+
+#### (g) Okun's Law without Outliers
+
+After removing outliers from the data, let's do the plot again:
+
+```{r}
+#| eval: false
+# Plot again
+ggplot("FILL IN THE BLANK HERE") +
+  labs(
+    title = "Okun’s Law Visualization without Outliers",
+    x = "Change in Unemployment Rate (%)",
+    y = "Change in Real GDP (%)"
+  ) +
+  theme_minimal(base_size = 12)
+
+```
+
+Again, let's take a look at the slope. Does it look consistent with the Okun's Law?
+
+```{r}
+#| eval: false
+# Fitted Line after Trim
+line_fit <- YOUR_CODE(gdp_growth ~ unrate_chg, data = okun_trim)
+YOUR_CODE(line_fit)
+
+# Equation
+line_equation <- paste0("ΔGDP = ",
+                          round(coef(line_fit)[1], 2), " + ", 
+                          round(coef(line_fit)[2], 2), " × ΔUnemp")
+
+line_equation
+```
+
 
 <!-- BEGIN PROFILE:r-teaching-guide -->
 ::: {.content-visible when-profile="r-teaching-guide"}
@@ -22,20 +206,44 @@ Teaching Note
 🎯 **Learning Objective** 
 Students should:
 
-- XXXXX
+- Recall and explain the Okun's Law (have been covered in ECON10003)
+- Retrieve and prepare macroeconomic data (real GDP and unemployment rate) from FRED.
+- Resolve data frequency mismatches by aggregating monthly to quarterly data.
+- Compute growth rates and changes (YoY GDP growth, the change in unemployment rate).
+- Visualize relationships using scatter plots using `ggplot`.
+- Understand the impact of outliers in data analyses and the basic approach (i.e., trim) to eliminate outliers
 
 ✅   **Core Concepts to Highlight**
 
-List them here
+Okun’s Law: Economic expansions (higher output) tend to reduce unemployment, while recessions (lower output) increase unemployment.
 
+Data frequency mismatch: GDP is typically quarterly, while unemployment is monthly. The two datasets must be aligned for merge and analysis.
 
 💬 **Suggested In-Class Prompts** (if needed)
 
-List as needed
+In part (b):
+
+- Do these two datasets have the same number of observations? If not, why?
+- What can we do if we want to merge two data with different frequency? Which way is better?
+
+In part (c):
+
+- How would you decide the number of lags when calculating YoY GDP growth?
+
+In part (d) (e):
+
+- Did you see any unusual dots in the graph? Make a guess, what time period(s) do these dots belong to?
+- Do you get the slope consistent with that implied by the Okun's Law? If not, why?
 
 📌 **Common Misunderstandings**
 
-List as needed
+Student may get confused with "levels vs. changes." The Okun's Law describes the relation between **changes** in GDP and **changes** in unemployment. Students may not get the plots correct if they use levels.
+
+Students may try to merge monthly unemployment rate data with quarterly real GDP data without adjustment. Emphasizing that we need to address the inconsistency in frequency before proceeding with merge and analyses.
+
+Students may calculate GDP growth as QoQ growth rather than YoY growth. We need to clarify that YoY growth is more commonly used because it avoids seasonality.
+
+In scattered plots and linear regressions, student may use unemployment as Y-axis and the dependent variable. This is fine, but we need to remind student that they need to do a flip in their interpretation of results.
 
 :::
 
@@ -55,11 +263,165 @@ Solution
 
 ::: {.solution-block-body}
 
-Here’s the explanation and code:
+####(a) 
+
+Load your packages and set up API
+```{r}
+# Load packages
+library(fredr) # Package for Using FRED API
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+
+# Assign your API key to a variable "api_key"
+api_key <- "68dfb3ed54ef8ffd7c9b618e74839e4d" 
+# Set API Key 
+fredr_set_key(api_key)
+```
+
+Get data from FRED:
+```{r}
+# Real GDP Data
+gdp <- fredr(
+  series_id = "GDPC1",
+  observation_start = as.Date("1989-01-01"), # One-year ahead for lag operation
+  observation_end   = as.Date("2024-12-31")
+) %>%
+  select(date, gdp = value) 
+
+# Unemployment
+unrate <- fredr(
+  series_id = "UNRATE",
+  observation_start = as.Date("1989-01-01"), # One-year ahead for lag operation
+  observation_end   = as.Date("2024-12-31")
+) %>%
+  select(date, unrate = value)
+
+```
+
+#### (b)
+The two datasets are different in data frequency. Unemployment is monthly, while real GDP is quarterly. Such situation is quite common in practice, and there are two broad category of methods that we can consider to address this issue.
+
+- "Down-sample" (aggregate high frequency to get low frequency)
+  - Use when your analysis is at the lower frequency (e.g., quarters for Okun’s Law).
+  - How to aggregate (choose based on variable type):
+    - Flow variables (accumulate over time: GDP, sales, income) → **sum** within the period.
+    - Stock / rate variables (snapshot/average level over time: unemployment rate, interest rate, CPI level) → usually **average** within the period (or end-of-period if that’s the convention).
+- "Up-sample" (disaggregate low frequency to match high frequency)
+  - Do a back-fill or forward-fill for your low-frequency data so that it can be matched with high-frequency data. 
+    - For example, back-filling GDP numbers in 2025-02-01 and 2025-03-01 using the value as of 2025-04-01.
+  - Linear interpolation. This is to assume that the data grows/declines in a linear fashion.
+    - If GDP as of 2025-01-01 and 2025-04-01 is 100 and 160, respectively, we assume that GDP grows in a linear fashion, and assign 120 and 140 to 2025-02-01 and 2025-03-01, respectively.
+
+
+#### (c)
 
 ```{r}
-print("Hello, world!")
+# Calculate YoY GDP Growth
+gdp_growth <- gdp %>%
+  arrange(date) %>%
+  mutate(gdp_growth = 100 * (gdp / lag(gdp, 4) - 1)) 
+  # Calculate the GDP growth relative to the same quarter in the previous year
 ```
+
+
+```{r}
+# Convert to Quarter Unemployment Rates and Calculate YoY changes
+unrate_qtr <- unrate %>%
+  # Use the first month (Jan, Apr, Jul, Oct) to represent each quarter
+  mutate(quarter = floor_date(date, "quarter")) %>% 
+  group_by(quarter) %>%
+  summarize(
+    unrate = mean(unrate), 
+    .groups = "drop") %>%
+  rename(date = quarter) %>%
+  arrange(date) %>%
+  mutate(unrate_chg = unrate - lag(unrate))
+```
+
+#### (d) 
+
+```{r}
+# Merge data
+okun <- inner_join(gdp_growth, unrate_qtr, by = "date") %>%
+        filter(!is.na(unrate_chg) &!is.na(gdp_growth) )
+
+# Scatter Plot
+scatter_plt <- ggplot(okun, aes(x = unrate_chg, y = gdp_growth)) +
+  geom_point(color = "steelblue", alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, color = "darkred") +
+  labs(
+    title = "Okun’s Law Visualization",
+    x = "Change in Unemployment Rate (%)",
+    y = "Change in Real GDP (%)"
+  ) +
+  theme_minimal(base_size = 12)
+
+scatter_plt
+```
+
+#### (e)
+```{r}
+# Slope of fitted line
+line_fit <- lm(gdp_growth ~ unrate_chg, data = okun)
+coef(line_fit)
+
+# Equation
+line_equation <- paste0("ΔGDP = ",
+                          round(coef(line_fit)[1], 2), " + ", 
+                          round(coef(line_fit)[2], 2), " × ΔUnemp")
+
+line_equation
+```
+As you can see, the slope is -0.97 and differs from "2~3%" as suggested by the Okun's Law.
+
+
+#### (f)
+```{r}
+# Remove the outliers
+okun_trim <- okun |>
+  filter(
+    between(gdp_growth, 
+            quantile(gdp_growth, 0.01, na.rm = TRUE), 
+            quantile(gdp_growth, 0.99, na.rm = TRUE)
+            ),
+    between(unrate_chg, 
+            quantile(unrate_chg, 0.01, na.rm = TRUE), 
+            quantile(unrate_chg, 0.99, na.rm = TRUE)
+            )
+  )
+
+# Plot again
+ggplot(okun_trim, aes(x = unrate_chg, y = gdp_growth)) +
+  geom_point(color = "steelblue", alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, color = "darkred") +
+  labs(
+    title = "Okun’s Law Visualization without Outliers",
+    x = "Change in Unemployment Rate (%)",
+    y = "Change in Real GDP (%)"
+  ) +
+  theme_minimal(base_size = 12)
+
+```
+
+
+#### (g)
+```{r}
+
+# Fitted Line after Trim
+line_fit <- lm(gdp_growth ~ unrate_chg, data = okun_trim)
+coef(line_fit)
+
+# Equation
+line_equation <- paste0("ΔGDP = ",
+                          round(coef(line_fit)[1], 2), " + ", 
+                          round(coef(line_fit)[2], 2), " × ΔUnemp")
+
+line_equation
+
+```
+
+Now, the slop is quite consistent with the Okun's Law. Our analyses suggest that the Okun's Law, although has been there for decades, still applies to the macroeconomy.
 :::
 
 :::

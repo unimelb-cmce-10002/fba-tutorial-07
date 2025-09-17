@@ -1,7 +1,7 @@
-project:
+project: 
   render:
     - tutorial.qmd
-title: 'Questions document: R version'
+title: 'Tutorial 7: Obtaining Macroeconomic Data through FRED'
 execute:
   eval: false
 format:

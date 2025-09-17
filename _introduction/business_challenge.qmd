@@ -1,3 +1,22 @@
 ## The Business Challenge
 
-Explain the Business Challenge and set up in this file
+The macroeconomy is the stage on which every business decision plays out. No business, whether a global tech giant, a local café, or even a freelance consultant, operates in a vacuum. Shifts in GDP growth, spikes in inflation, surges in unemployment, or sudden changes in interest rates ripple through the economy and ultimately shape outcomes for each microeconomic entity.
+
+Over the past few decades, we have seen how powerful these forces can be. The 2008 global financial crisis reshaped credit markets and consumer demand for years. The COVID-19 pandemic disrupted supply chains, accelerated digital adoption, and left lasting changes in labor markets. Even today, firms must navigate the challenges of inflationary pressures, shifting interest rate policies, and geopolitical uncertainty.
+
+For data analysts, we cannot answer micro-level business questions without accounting for the macroeconomic backdrop. In this session, you will step into the role of a macro-aware business analyst. Specifically, you will:
+
+- Obtain real macroeconomic data on key indicators like GDP, unemployment, and inflation.
+
+- Visualize and explore trends across different time periods, spotting patterns between macroeconomic indicators.
+
+To carry out these tasks, we need high-quality and reliable macroeconomic data. The **Federal Reserve Economic Data (FRED)**, managed by the Federal Reserve Bank of St. Louis, is one of the most widely used platforms by academics, policymakers, and industry analysts alike. It offers thousands of time series on the U.S. and global economy.
+
+We will learn two ways to interact with FRED:
+
+- Directly through the FRED website, which allows quick searches and visualization.
+
+- Programmatically through the FRED API, which lets us pull large datasets directly into our analysis tools and integrate them into reproducible workflows.
+
+By the end of this workshop, you’ll not only gain hands-on experience with macroeconomic data, but also develop an appreciation for how the “big picture” shapes the smaller decisions businesses face every day.
+

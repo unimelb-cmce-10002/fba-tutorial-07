@@ -3,6 +3,9 @@
 
 By the end of this tutorial, you should be able to:
 
-- COMPLETE THIS
-- WITH MULTIPLE BULLETS
+- Get familiar the workflow of using API to acquire data
+- Acquire macroeconomic data from the U.S. Federal Reserve Economic Data through web-based platform and API
+- Clean and visualize macroeconomic data
+- Identify trends and patterns in macroeconomic data and interpret findings
+- Critically evaluate data limitations and challenges (e.g., seasonality, outliers, etc.)
 :::

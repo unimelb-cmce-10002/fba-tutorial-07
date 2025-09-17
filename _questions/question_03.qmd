@@ -1,12 +1,237 @@
 <!-- question-type: prepare -->
-### Exercise 3: Title
+### Exercise 3: Set Up FRED API and Acquire Unemployment Data
 
-This is the text for the question, with its accompanying code 
+::: callout-note
+## Tasks
+
+- Skim the user manual of the FRED API (https://fred.stlouisfed.org/docs/api/fred/) and the package `fredr` (https://cran.r-project.org/web/packages/fredr/vignettes/fredr.html).
+
+- Set up FRED API in your program.
+
+- Use `fredr` to search for the ID of unemployment rate data.
+
+- Download unemployment rate data from 1990 to 2024 using the FRED API.
+
+:::
+
+#### (a) Set Up the FRED API
+After obtaining the API key for FRED, let's connect to the API and download the data we need. 
+
+- Make sure that you have all required packages loaded. `fredr` is the package we need for getting access to the FRED API.
 
 ```{r}
-# Example code for the question
-1 + 1
+#| eval: false
+
+# Install the packages if needed:
+# install.packages(c("fredr", "dplyr", "ggplot2", "lubridate"))
+
+# Load packages
+library(fredr) # Package for Using FRED API
+library(dplyr)
+library(ggplot2)
+library(lubridate)
 ```
+
+- We need to tell the program your API key (i.e., the log-in credentials for your R program) using the function `fredr_set_key()`.
+
+```{r}
+#| eval: false
+# Assign your API key to a variable "api_key"
+api_key <- "YOUR_API_KEY" 
+# Set API Key 
+fredr_set_key(api_key)
+```
+
+- We are now connected to the API and ready for data acquisition.
+
+#### (b) Extract data using `fredr()`
+
+`fredr()` is the function we are going to use to extract data from FRED. 
+
+This function comes with several arguments:
+
+```{r}
+#| eval: false
+data <- fredr(
+  series_id = "SERIES ID", # Replace with the Series ID in FRED
+  observation_start = , # The start date of extracted data
+  observation_end   = # The end date of extracted data
+)
+```
+
+- `series_id` is the ID of the data series you would like to retrieve from FRED. 
+- `observation_start` specifies the starting date of the data. Note that this value needs to be in the date format. We can use `as.Date(YYYY-MM-DD)` to generate dates. If this value is not specified, the function will retrieve the data back to the earliest available period.
+- `observation_end` specifies the starting date of the data. If this value is not specified, the function will retrieve the data until the most recent period.
+
+::: {.callout-tip title="What is `as.Date()`" collapse="true"}
+`as.Date()` is a base function in R that generates or converts variables to **date variables**. Dates and time stamps are unique data formats that require additional work (more about this topic in the next chapter).
+
+- By default, `as.Date()` converts strings in "YYYY-MM-DD" into corresponding dates and store the value as the date format. For example, `as.Date("2025-09-10")` delivers a date value corresponding to September 10, 2025. 
+- `as.Date()` can also deal with other date expressed in alternative ways as long as you specify the date style accordingly. For example, `as.Date("10/09/2025", format = "%d/%m/%Y")` and `as.Date("Sep 10, 2025", format = "%b %d, %Y")` also give you the same date value in R.
+
+In `fredr()`, the values for `observation_start =` and `observation_end = ` must be in the date format. You need to make sure to input date values for these two arguments.
+
+:::
+
+::: callout-note
+## Get Series IDs
+Each series of data in FRED has a unique ID. There are two ways to find the IDs:
+
+- You can see the series ID on its pages on the FRED's website 
+- Use the embedded search function in `fredr` to get the IDs
+  - `fredr_series_search_text()` is the function for you to search by key words and find series IDs for the data you need.
+  - Simply put the key words (with quote marks) in the function to do the search
+  - Filter the output and keep only titles and corresponding IDs
+
+```{r}
+#| eval: false
+fredr_series_search_text("TEXT HERE")
+# Select and display the results with two columns: Series ID and title of data
+fredr_series_search_text("TEXT HERE")[YOUR_CODE]
+
+```
+:::
+
+
+#### (c) Retrieve Data
+
+Once you get the ID for the unemployment rate data, download the unemployment data from 1990 to 2024. Note that `fredr()` plays nicely with the `tidyverse` and you can directly apply data wrangling skills you have learned so far.
+
+```{r}
+#| eval: false
+unrate <- YOUR_CODE(
+  series_id = "YOUR_CODE",
+  observation_start = as.Date("1990-01-01"),
+  observation_end   = as.Date("2024-12-31")
+) %>% 
+  YOURCODE(date, unrate = value) 
+  # Keep the date column and the unemployment rate (rename as "unrate")
+```
+
+#### (d) Visualize Inflation and Unemployment Data
+
+Inflation has become a major concern in the macroeconomy. Since 2020, large-scale monetary expansions and government stimulus have driven inflation sharply higher, making it a central topic of discussion. In this exercise, you’ll get to use the FRED API to pull real economic data and calculate inflation yourself.
+
+(d1) Retrieve the Core Consumer Price Index (all items excluding food and energy) during 1990 and 2024 from FRED.
+
+
+
+(d2) Inflation is often measured as the changes in consumer price index (CPI). Here, we are going to calculate **YoY** changes in core CPI. 
+  
+::: {.callout-tip title="Calculate YoY (year-over-year) Changes" collapse="true"}
+When calculating changes in macroeconomic data (as well as other data evolving over time), we tend to focus on YoY changes. The major reason is that many economic indicators are strongly affected by seasons. Comparing July to June (MoM) or Q4 to Q3 (QoQ) may reflect seasonal swings rather than true economic trends. If we focus on YoY changes, such seasonal variations will be cancelled out.
+
+The `tidyverse` makes it easy for us to calculate YoY changes in a variable. As the CPI data is monthly, to calculate YoY changes, we simply need to calculate the changes in the value from month _t-12_ to _t_. 
+
+To do this in R, we need to
+- **Sort** the data by date in the ascending order
+- Use `lag()` to "look backwards in the data". lag() lets you grab the value in previous rows within the same column so you can compare it to the current one.
+  - `lag(x, 1)`: value from 1 row earlier
+  - `lag(x, 3)`: value from 1 row earlier (useful if your data is monthly and you want last quarter’s value)
+  - `lag(x, 12)`: value from 12 rows earlier (useful if your data is monthly and you want last year’s value)
+- You may need additional data ahead of your desired sample period so that the first few observations are non-missing.
+  - For example, if you want to calculate inflation rate as of 1990-01-01, you need to keep your CPI data back to 1989-01-01 so that you can calculate YoY changes for 1990-01-01.
+  - If you only have CPI data starting from 1990-01-01, the inflation rate for 1990-01 to 1990-12 will be missing, as their is no denominator for the calculation of YoY changes/growth.
+:::
+
+Here is the code and you need to fill in necessary information
+```{r}
+#| eval: false
+# Calculate inflation
+inflation <- YOUR_CODE(
+  series_id = "CPILFESL",
+  observation_start = as.Date("1989-01-01"), # One year ahead for lag operation
+  observation_end = as.Date("2024-12-31")) |>
+  YOUR_CODE(date, cpi = value) |>
+  arrange(date) |>
+  YOUR_CODE(inflation = (cpi / lag(cpi, 12) - 1) * 100) |>
+  filter(!is.na(inflation)) # Remove missing values
+```
+
+
+
+
+(d3) Plot unemployment rates and inflation from 1990 to 2024 in **one single graph**.
+
+```{r}
+#| eval: false
+p1 <- ggplot() +
+  # Inflation line
+  YOUR_CODE(
+    data = inflation,
+    aes(x = date, y = inflation, color = "Inflation (%)"),
+    linewidth = 1
+  ) +
+  # Unemployment line
+  YOUR_CODE(
+    data = unrate,
+    aes(x = date, y = unrate, color = "Unemployment Rate (%)"),
+    linewidth = 1
+  ) +
+  labs(
+    title = "Inflation and Unemployment Rate (1990 - 2024)",
+    x = NULL, y = "Percent", color = NULL
+  ) +
+  scale_x_date(date_breaks = "2 years", date_labels = "%Y") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "top")
+
+p1
+```
+
+#### (e) Recession Periods
+Economic recessions indicate that the whole economy is in a bad shape. The National Bureau of Economic Research defines economic recessions as a period when there is a significant decline in economic activities (https://www.nber.org/research/business-cycle-dating). According to their thresholds for the depth, diffusion, and duration of economic recessions, there are certain periods defined as recession periods. FRED integrates NBER's recession period data into its database and allows us to extract the data using the API.
+
+(e1) Use the FRED API to get access to the U.S. recession data (`series_id ="USREC"`).
+
+```{r}
+#| eval: false
+# US recessions data: 1 = during recession, 0 = otherwise
+usrec <- fredr(series_id = "USREC", 
+               YOUR_CODE = YOUR_CODE("1990-01-01"),
+               YOUR_CODE = YOUR_CODE("2024-12-31")) |>
+  YOUR_CODE(date, rec = value) |>
+  arrange(date)
+```
+
+(e2) (Challenge yourself) The data from FRED is at the month level, showing whether a month is in recession or not. Use data wrangling tools you have learned from this subject to convert the monthly recession data into a data at the recession level (i.e., each row represents one recession). For each recession, we need two columns: `start` showing the start month of a recession, and `end` showing the end month of a recession. 
+
+::: {.callout-tip title="Try before seeing this part" collapse="true"}
+The code below is an application of data wrangling tools as well as logical operations (`True` and `False`, as well as the operations for logical values). No pressure if you cannot write this chunk independently - make sure you are able to understand each line.
+```{r}
+#| eval: false
+recession_period <- usrec |>
+  mutate(
+    rec = (rec == 1), 
+    # Convert "rec" into a logical variable (true/false) for next line.
+    start_flag = rec & !lag(rec, default = FALSE) 
+    # Mark the start month of recession
+  ) |>
+  filter(rec) |>
+  group_by(grp = cumsum(start_flag)) |>
+  summarise(
+    start = min(date),
+    end   = max(date),
+    .groups = "drop" 
+  ) |> select(start, end)
+```
+:::
+(e3) In the plot generated from (d3), add shaded areas to indicate recession periods.
+
+```{r}
+#| eval: false
+p1 +   geom_rect(
+    data = recession_period,
+    aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf),
+    fill = "grey75", alpha = 0.25, inherit.aes = FALSE
+  )
+```
+
+
+(e4) Is there any patterns for unemployment rates and inflation during the recession periods? How do you explain the pattern(s)?
+
+
 
 <!-- BEGIN PROFILE:r-teaching-guide -->
 ::: {.content-visible when-profile="r-teaching-guide"}
@@ -22,20 +247,37 @@ Teaching Note
 🎯 **Learning Objective** 
 Students should:
 
-- XXXXX
+- Understand how to set up and authenticate access to the FRED API using an API key.
+- Use the `fredr` package to query FRED datasets directly from R.
+- Identify the correct series ID for unemployment data using both the FRED website and `fredr_series_search_text()`.
+- Extract unemployment rate and CPI data for a specified time range (1990–2024) and store it in a tidy format for analysis.
+- Visualize macroeconomic data over time and interpret the trends and patterns.
 
 ✅   **Core Concepts to Highlight**
 
-List them here
+Unemployment rate
+Inflation
+NBER recession definition
 
 
 💬 **Suggested In-Class Prompts** (if needed)
 
-List as needed
+What happens if you search on the FRED website for just the word ‘unemployment’? How many different series IDs appear? How would you decide which one is the ‘official’ unemployment rate?
+
+Notice the arguments observation_start and observation_end. Why do we have to use as.Date() instead of just writing the dates as text? What happens if you leave these arguments blank?
+
+How is using the API different from manually downloading CSVs from FRED? What advantages do you see?
+
+
+
 
 📌 **Common Misunderstandings**
 
-List as needed
+- Students may think the API key is optional or that any random string will work
+- Students may assume the keyword search returns one unique ID, but in reality, there are many unemployment series
+  - The “headline” U.S. unemployment rate is "UNRATE" (monthly, seasonally adjusted, from BLS).
+- Students may forget to wrap the date string with as.Date(), causing errors
+
 
 :::
 
@@ -55,11 +297,135 @@ Solution
 
 ::: {.solution-block-body}
 
-Here’s the explanation and code:
+#### (a) 
 
 ```{r}
-print("Hello, world!")
+# Install the packages if needed:
+# install.packages(c("fredr", "dplyr", "ggplot2", "lubridate"))
+
+# Load packages
+library(fredr) # Package for Using FRED API
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+
+# Assign your API key to a variable "api_key"
+api_key <- "68dfb3ed54ef8ffd7c9b618e74839e4d" 
+# Set API Key 
+fredr_set_key(api_key)
 ```
+
+#### (b)
+
+```{r}
+# Search for Tags
+print(fredr_series_search_text("unemployment")[c("id", "title")])
+```
+
+#### (c)
+
+```{r}
+# Obtain unemployment rate data
+unrate <- fredr(
+  series_id = "UNRATE",
+  observation_start = as.Date("1990-01-01"),
+  observation_end   = as.Date("2024-12-31")
+) %>% select(date, unrate = value)
+# Keep the date column and the unemployment rate (rename as "unrate")
+```
+
+
+#### (d1 & d2)
+
+```{r}
+# Calculate inflation
+inflation <- fredr(
+  series_id = "CPILFESL",
+  observation_start = as.Date("1989-01-01"), # One year ahead for lag operation
+  observation_end = as.Date("2024-12-31")) |>
+  select(date, cpi = value) |>
+  arrange(date) |>
+  mutate(inflation = (cpi / lag(cpi, 12) - 1) * 100) |>
+  filter(!is.na(inflation)) 
+```
+
+#### (d3)
+```{r}
+p1 <- ggplot() +
+  geom_line(
+    data = inflation,
+    aes(x = date, y = inflation, color = "Inflation (%)"),
+    linewidth = 1
+  ) +
+  # Unemployment line
+  geom_line(
+    data = unrate,
+    aes(x = date, y = unrate, color = "Unemployment Rate (%)"),
+    linewidth = 1
+  ) +
+  labs(
+    title = "Inflation and Unemployment Rate (1990 - 2024)",
+    x = NULL, y = "Percent", color = NULL
+  ) +
+  scale_x_date(date_breaks = "2 years", date_labels = "%Y") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "top")
+
+p1
+```
+
+#### (e1)
+```{r}
+# US recessions data: 1 = during recession, 0 = otherwise
+usrec <- fredr(series_id = "USREC", 
+               observation_start = as.Date("1990-01-01"),
+               observation_end = as.Date("2024-12-31")) |>
+  select(date, rec = value) |>
+  arrange(date)
+```
+
+#### (e2)
+```{r}
+
+recession_period <- usrec |>
+  mutate(
+    rec = (rec == 1), 
+    # Convert "rec" into a logical variable (true/false) for next line.
+    start_flag = rec & !lag(rec, default = FALSE) 
+    # Mark the start month of recession
+  ) |>
+  filter(rec) |>
+  group_by(grp = cumsum(start_flag)) |>
+  summarise(
+    start = min(date),
+    end   = max(date),
+    .groups = "drop" 
+  ) |> select(start, end)
+```
+
+#### (e3)
+```{r}
+p2 <- p1 + geom_rect(
+    data = recession_period,
+    aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf),
+    fill = "grey75", alpha = 0.25, inherit.aes = FALSE
+  )
+
+p2
+```
+
+#### (e4)
+In recession periods, unemployment rates tend to increase dramatically, whereas inflation exhibit slight decreases. 
+
+One possible explanation: when the economy is in demand-driven recessions:
+
+- Less spending → fewer sales. Firms scale back hours and jobs → unemployment rises.
+- With soft demand, firms have less ability to raise prices → inflation falls.
+
+Note that this may not be the case if the recession is driven by supply factors (e.g., surge in oil prices).
+
+
 :::
 
 :::

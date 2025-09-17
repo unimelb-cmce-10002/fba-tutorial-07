@@ -1,12 +1,20 @@
 <!-- question-type: prepare -->
-### Exercise 1: Title
+### Exercise 1: Visualize and Download Macroeconomic Data Directly from the FRED Website
 
-This is the text for the question, with its accompanying code 
+FRED offers an easily accessible web-based platform for users to visualize and download macroeconomic data directly from their website (https://fred.stlouisfed.org/). 
 
-```{r}
-# Example code for the question
-1 + 1
-```
+Search in FRED and find the pages of the following data: 
+
+- Real Gross Domestic Product (GDP)
+- Core Consumer Price Index (CPI)
+- Unemployment Rate
+
+Read through each page and think about the following questions (recap of Macroeconomics):
+
+- What does "core CPI" mean here? How does it differ from normal CPI?
+- What is the relation between CPI and inflation?
+
+
 
 <!-- BEGIN PROFILE:r-teaching-guide -->
 ::: {.content-visible when-profile="r-teaching-guide"}
@@ -22,20 +30,32 @@ Teaching Note
 🎯 **Learning Objective** 
 Students should:
 
-- XXXXX
+- Get familiar with the user interface of FRED
+- Find relevant notes and information about FRED data
+- Understand several key concepts or characteristics related to macroeconomic data
+
 
 ✅   **Core Concepts to Highlight**
 
-List them here
-
+- Real GDP: Real Gross Domestic Product (Real GDP) is the total value of all final goods and services produced within a country in a given period, adjusted for inflation.
+- Core CPI: Consumer Price Index of all items excluding food and energy. Core CPI is more widely used to measure inflation because food and energy prices are very volatile and may introduce significant noises.
+- Unemployment rate: The number of unemployed as a percentage of the labor force (year 16+).
 
 💬 **Suggested In-Class Prompts** (if needed)
 
-List as needed
+What does **real GDP** mean?
+
+Have you heard about core CPI? How does it differ from normal CPI? Why is this difference important?
+
+How do we calculate inflation from CPI?
 
 📌 **Common Misunderstandings**
 
-List as needed
+Some students may think “core CPI” means the most important items in the CPI basket. They may not realize it specifically excludes food and energy due to volatility, not because those categories are unimportant.
+
+Students may assume seasonal adjustment changes the actual data values (e.g., “the government manipulates the numbers”), rather than understanding it’s a statistical method to filter predictable patterns.
+
+
 
 :::
 
@@ -55,11 +75,14 @@ Solution
 
 ::: {.solution-block-body}
 
-Here’s the explanation and code:
 
-```{r}
-print("Hello, world!")
-```
+- What does "core CPI" mean here? How does it differ from normal CPI?
+  - Core CPI refers to the CPI calculated using all items excluding food and energy. The major reason for excluding food and energy from calculation is that food and energy prices are very volatile and may introduce significant noises into CPI calculation. In practice, core CPI is often deemed to be a more reliable metric reflecting inflation in the economy.
+  
+- What is the relation between CPI and inflation?
+  - Inflation is measured as the changes in Consumer Price Index. 
+  - We calculate inflation as the year-over-year changes in CPI.
+
 :::
 
 :::
