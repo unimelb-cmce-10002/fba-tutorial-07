@@ -29,12 +29,12 @@ unrate_sa <- YOUR_CODE(
 # keep date and unemployment rate (adjusted), rename it as "unrate_sa"
 
 # Unemployment rate (seasonally unadjusted)
-unrate_usa <- YOUR_CODE(
+unrate_nsa <- YOUR_CODE(
   YOUR_CODE = "YOUR_CODE",
   observation_start = "YOUR_CODE",
   observation_end = "YOUR_CODE"
 ) %>% select(YOUR_CODE) 
-# keep date and unemployment rate (unadjusted), rename it as "unrate_usa"
+# keep date and unemployment rate (unadjusted), rename it as "unrate_nsa"
 ```
 
 #### (b) Visualize Unemployment Rates
@@ -166,7 +166,7 @@ api_key <- "68dfb3ed54ef8ffd7c9b618e74839e4d"
 fredr_set_key(api_key)
 ```
 
-The series IDs for seasonally adjusted and unadjusted unemployment rates are `UNRATE` and `UNRATEUSA`, respectively. You can find the information either through the FRED website or `fredr_series_search_text()`.
+The series IDs for seasonally adjusted and unadjusted unemployment rates are `UNRATE` and `UNRATENSA`, respectively. You can find the information either through the FRED website or `fredr_series_search_text()`.
 
 ```{r}
 # Unemployment rate (seasonally adjusted)
